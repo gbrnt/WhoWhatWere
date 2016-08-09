@@ -2,12 +2,10 @@
  * WhoWhatWere stylesheet
  */
 
-html {
+body {
     font-size: 24px;
     font-family: "Lucida Console", Monaco, monospace;
-}
 
-body {
     margin-left: 25%;
     margin-right: 25%;
     background-color: black;
@@ -16,25 +14,32 @@ body {
 }
 
 header {
-    margin-bottom: 2em;
-    padding-top: 1em;
+    margin-bottom: 1.5em;
+    margin-top: 1.5em;
 }
 
 nav {
-    font-size: 0.6em;
+    font-size: 0.8em;
 }
 
 h1 {
-    font-size: 1.2em;
+    font-size: 1.4em;
+    font-weight: bold;
 }
 
 h2 {
     margin: 0.5em 0;
-    font-size: 0.75em;
+    font-size: 0.8em;
+    /*font-weight: bold;*/
+}
+
+strong {
+    font-weight: bold;
 }
 
 p {
-    margin-top:1em;
+    margin-bottom: 1em;
+    font-size: 1.2em;
 } 
 
 a {
@@ -49,3 +54,22 @@ details {
     font-size:0.5em;
 }
 
+video {
+    margin: 1em 0;
+}
+
+#youtubelogo {
+    float: left;
+    padding-right: 1em;
+}
+
+#headermiddle {
+    padding-top: 0.25em;
+    display: inline-block;
+}
+
+#kopimi {
+    float: right;
+    display: inline-block;
+    margin-top: 3px;
+}
