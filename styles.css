@@ -3,14 +3,13 @@
  */
 
 body {
-    font-size: 24px;
+    font-size: 16px;
     font-family: "Lucida Console", Monaco, monospace;
 
     margin-left: 25%;
     margin-right: 25%;
     background-color: black;
     color: white;
-    /*font-size: 0.5em;*/
 }
 
 header {
@@ -19,18 +18,16 @@ header {
 }
 
 nav {
-    font-size: 0.8em;
+    font-size: 1em;
 }
 
 h1 {
-    font-size: 1.4em;
-    font-weight: bold;
+    font-size: 2em;
 }
 
 h2 {
-    margin: 0.5em 0;
-    font-size: 0.8em;
-    /*font-weight: bold;*/
+    font-size: 1.25em;
+    padding-bottom: 0.25em;
 }
 
 strong {
@@ -39,7 +36,6 @@ strong {
 
 p {
     margin-bottom: 1em;
-    font-size: 1.2em;
 } 
 
 a {
@@ -47,7 +43,7 @@ a {
 }
 
 time {
-    font-size: 0.5em;
+    font-size: 0.8em;
 }
 
 article {
@@ -55,11 +51,12 @@ article {
 }
 
 details {
-    font-size:0.5em;
+    font-size: 0.9em;
 }
 
 video {
-    margin: 1em 0;
+    margin: 1em auto 1.5em auto;
+    display: block;
 }
 
 #youtubelogo {
