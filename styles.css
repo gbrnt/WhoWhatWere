@@ -50,6 +50,10 @@ time {
     font-size: 0.5em;
 }
 
+article {
+    padding-bottom: 1em;
+}
+
 details {
     font-size:0.5em;
 }
