@@ -1,0 +1,51 @@
+/*
+ * WhoWhatWere stylesheet
+ */
+
+html {
+    font-size: 24px;
+    font-family: "Lucida Console", Monaco, monospace;
+}
+
+body {
+    margin-left: 25%;
+    margin-right: 25%;
+    background-color: black;
+    color: white;
+    /*font-size: 0.5em;*/
+}
+
+header {
+    margin-bottom: 2em;
+    padding-top: 1em;
+}
+
+nav {
+    font-size: 0.6em;
+}
+
+h1 {
+    font-size: 1.2em;
+}
+
+h2 {
+    margin: 0.5em 0;
+    font-size: 0.75em;
+}
+
+p {
+    margin-top:1em;
+} 
+
+a {
+    color: white; text-decoration: none;
+}
+
+time {
+    font-size: 0.5em;
+}
+
+details {
+    font-size:0.5em;
+}
+
