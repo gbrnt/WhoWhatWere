@@ -107,6 +107,33 @@ footer img {
     opacity: 0.6;
 }
 
+/* Geeky CSS Scrollbar */
+::-webkit-scrollbar {
+    width: 12px;
+}
+ 
+/* Track */
+::-webkit-scrollbar-track {
+    background: #111;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #4e4e4e; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a; 
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #343434; 
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+	background: #a8a8a8; 
+}
+
 @media (max-width: 900px){
     body {
         margin: 0 10%;
