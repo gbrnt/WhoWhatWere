@@ -102,6 +102,11 @@ footer img {
     margin-top: 3px;
 }
 
+#youtubelogo:hover,
+#kopimi:hover {
+    opacity: 0.6;
+}
+
 @media (max-width: 900px){
     body {
         margin: 0 10%;
