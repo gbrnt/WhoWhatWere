@@ -59,6 +59,12 @@ details {
     padding: 15px 0 0 0;
 }
 
+details summary {
+    font-size: 1.2em;
+    /*text-transform: uppercase;*/
+    font-weight: bold;
+}
+
 video {
     margin: 1em auto 1.5em auto;
     display: block;
