@@ -1,5 +1,5 @@
 # WhoWhatWere
-WhoWhatWere is a [YouTube Channel](http://whowhatwere.download) run by [Chris Were](http://site.whowhatwere.download/info.html), focusing on GNU/Linux, Tech and all things Free Software. This repo contains his site, hosted on [ZeroNet](https://bit.no.com:43110/1PRY8bJF8kos6B91XLbAGRN99EuLVSZcXY), and the tools used to maintain it.
+WhoWhatWere is a [YouTube Channel](http://whowhatwere.download) run by [Chris Were](http://site.whowhatwere.download/info.html), focusing on GNU/Linux, Tech and all things Free Software. This repo contains his site, hosted on [ZeroNet](https://zeronet.io) ([proxy here](https://bit.no.com:43110/1PRY8bJF8kos6B91XLbAGRN99EuLVSZcXY)), and the tools used to maintain it.
 
 ## WereBot
 Optional script for quickly updating the site automatically.
