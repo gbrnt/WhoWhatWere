@@ -1,21 +1,20 @@
 # WhoWhatWere
-Website for Chris Were's channel WhoWhatWere, destined for ZeroNet
+Website for Chris Were's channel WhoWhatWere, destined for [ZeroNet](https://bit.no.com:43110/1PRY8bJF8kos6B91XLbAGRN99EuLVSZcXY)
 
-## Notice ( For video names change )
-To avoid having to redownload the site again on ZeroNet, simply change the names of these videos in your ZeroNet data directory and place them in the videos/ folder.
+## WereBot
+Optional script for quickly updating the site automatically.
+##### Requirements
+- [YouTube API Key](https://console.developers.google.com) 
+- [youtube-dl](https://rg3.github.io/youtube-dl/)
 
-A bash file to save yourself redownloading. Cd to your ZeroNet data folder, Eg.  `~/ZeroNet-Bundle/data/1PRY8bJF8kos6B91XLbAGRN99EuLVSZcXY`, and run the script.
-```
-touch videos
-mv 11.webm videos/fV6bv-XAtW8.webm
-mv 10.webm videos/SZ28yjko8PE.webm
-mv 9.webm videos/W51uAEvq4HA.webm
-mv 8.webm videos/zXI6b1TzdWk.webm
-mv 7.webm videos/uM4WBRjgP6c.webm
-mv 6.webm videos/w0_9Rb21hHY.webm
-mv 5.webm videos/Qd14fLmroPg.webm
-mv 4.webm videos/rJC0f96zjNw.webm
-mv 3.webm videos/iq5lJlK5470.webm
-mv 2.webm videos/8s1CWeoRHYI.webm
-mv 1.webm videos/J8DxiAVEfmg.webm
-```
+Upon launch, wereBot looks for a `youtubeapi` file in your home directory. If it cannot  
+find it, it'll ask you to enter a key and will save it for next time.
+
+##### Restore
+In the event that wereBot breaks the index, just run wereBot again and enter `r` to auto  
+restore the index.html file from the GitHub repository.
+
+##### Usage
+Simply run the script using `./wereBot` and enter `a` and _that's it_.  
+The script will automatically download the latest video from Chris's YouTube channel in _webm_ format,  
+retreive all necessary metadata and add the item as an `<article>` to the index page.
