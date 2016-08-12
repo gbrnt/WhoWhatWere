@@ -1,0 +1,267 @@
+#!/bin/bash
+
+# COLORS
+VERSION=1.0
+GRAY='\033[0;37m'
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# VARIABLES
+CHID=UCAPR27YUyxmgwm3Wc2WSHLw
+YT=https://www.youtube.com/watch?v=
+YTAPI="ERR"
+YTID="ERR"
+YTURL="ERR"
+TRIES=0
+CANDOWNLOAD=0
+DEBUG=0
+BACKUP=https://raw.githubusercontent.com/Luxtylo/WhoWhatWere/master/index.html
+
+# HTML VARIABLES
+HTMLDESC="UNKNOWN"
+HTMLTITLE="UNKNOWN"
+HTMLDATE="UNKNOWN"
+
+# ERROR
+function tryAgain(){
+	read -r -p "Try again? [y/N] " response
+	case $response in
+		[yY][eE][sS]|[yY])
+			TRIES=$(($TRIES + 1))
+			init
+			;;
+		*)
+			exit
+			;;
+	esac
+}
+
+# RESTORE
+function restore(){
+	if [ ! -f index_backup.html ]; then
+		#echo -e "${RED}WereBot could not find 'index_backup.html'"
+		echo -e "${CYAN}WereBot: Attempting to restore backup from GitHub...${NC}"
+		wget "$BACKUP" -O index.html || rm -f index.html
+		if [ ! -f index.html ]; then
+			echo -e "${RED}WereBot was unable to restore 'index.html'${NC}"
+			tryAgain
+		else
+			echo -e "${CYAN}WereBot: Successfully restored 'index.html'!${NC}"
+			sleep 2
+			init
+		fi
+	else
+		echo -e "${CYAN}WereBot: Local backup restored!${NC}"
+		mv index_backup.html index.html
+	fi
+}
+
+# WELCOME SCREEN
+function welcome(){
+clear
+echo -e "${CYAN}--------------------"
+echo "Welcome to WereBot v${VERSION}"
+echo "--------------------"
+echo -e "${GRAY}"
+echo -e "a | auto - Auto grab the latest video and add to index."
+echo -e "r |restore - Restores index.html from GitHub repository."
+echo -e "d | debug - Runs script in test mode and adds empty article to index."
+echo -e "${CYAN}"
+}
+
+# ASK RESTORE
+function askRestore(){
+	read -r -p "Attempt to restore 'index.html' to current directory? [y/N] " response
+	case $response in
+		[yY][eE][sS]|[yY])
+			restore
+			;;
+		*)
+			exit
+			;;
+	esac
+}
+
+# GET LINK
+function getLink(){
+	echo -e "${NC}Enter YouTube URL or ID:"
+	read YTURL
+	if [ "$YTURL" != "" ]; then
+		if [ "$YTURL" == "auto" ] ||  [ "$YTURL" == "a" ]; then
+			getLatest
+			YTURL=$YTID
+		fi
+		if [ "$YTURL" == "debug" ] || [ "$YTURL" == "d" ]; then
+			echo -e "${CYAN}WereBot: Debug On${NC}"
+			DEBUG=1
+			linkCorrect
+		fi
+		if [ "$YTURL" == "restore" ] || [ "$YTURL" == "r" ]; then
+			restore
+		fi
+		if [ ${#YTURL} == 11 ]; then
+			echo -e "${CYAN}WereBot: Potential YouTube ID:${NC}"
+			echo -e "${RED}${YT}${YTURL}${NC}"
+			YTURL="${YT}${YTURL}"
+		fi
+		if [[ "$YTURL" == "${YT}"* ]];then
+			linkCorrect
+		else
+			echo -e "${CYAN}WereBot: This doesn't look like a YouTube Address.${NC}"
+			getLink
+		fi
+	else
+		echo -e "${CYAN}WereBot: No input, exiting!${NC}"
+		exit
+	fi
+}
+
+# LINK CORRECT
+function linkCorrect(){
+	YTID=${YTURL#*?=}
+	API="https://www.googleapis.com/youtube/v3/videos?id=${YTID}&key=${YTAPI}&part=snippet&fields=items(snippet(title,description,publishedAt))"
+	if [ $DEBUG == 0 ]; then
+		echo -e "${CYAN}WereBot: Scraping YouTube...${NC}"
+		GET=$(curl -s "$API")
+	else
+		GET="title"
+	fi
+	if [[ $GET == *"title"* ]]; then
+		if [ $DEBUG == 0 ]; then
+			HTMLDATE=$(echo $GET | grep -Pom 1 '"publishedAt": "\K[^"]*')
+			HTMLDATE=${HTMLDATE/"T"*}
+			HTMLTITLE=$(echo $GET | grep -Pom 1 '"title": "\K[^"]*')
+			HTMLDESC=$(echo $GET | grep -Pom 1 '"description": "\K[^}]*')
+			HTMLDESC=${HTMLDESC::-2}
+			HTMLDESC=${HTMLDESC//\\n/<br>}
+			HTMLDESC="${HTMLDESC//\\\"/\"}"
+			# DISPLAY OUTPUT TO USER
+			echo -e "${RED}-------- VIDEO INFO --------"
+			echo -e "${RED}TITLE: ${GRAY}"$HTMLTITLE
+			echo -e "${RED}DATE: ${GRAY}"$HTMLDATE
+			echo -e "${RED}DESC: ${GRAY}"$HTMLDESC
+			echo -e "${RED}-------- VIDEO INFO --------"
+		fi
+		generate
+	else
+		echo -e "${RED}WereBot failed to connect to YouTube. Are you using a correct API key?"
+		tryAgain
+	fi
+}
+
+# GET LATEST
+function getLatest(){
+	echo -e "${CYAN}WereBot: Auto-grabbing recent videos...${NC}"
+	API="https://www.googleapis.com/youtube/v3/search?order=date&part=snippet&channelId=${CHID}&key=${YTAPI}"
+	GET=$(curl -s "$API")
+	if [[ $GET == *"title"* ]]; then
+		RETURN=${GET%%"snippet"*}
+		YTID=$(echo $RETURN | grep -Pom 1 '"videoId": "\K[^"]*')
+		echo -e "${CYAN}WereBot: Latest video found! ${YTID}${NC}"
+		else
+		echo -e "${RED}WereBot was unable to auto-retrieve latest YouTube video${NC}"
+	fi
+}
+
+# DOWNLOAD VIDEO
+function getVideo(){
+	if [ $CANDOWNLOAD == 1 ] && [ $DEBUG == 0 ]; then
+		echo -e "${CYAN}WereBot: Downloading video...${NC}"
+		youtube-dl -o videos/$YTID.webm -f 43 "$YT$YTID"
+		else
+		echo -e "${CYAN}WereBot: Download skipped.${NC}"
+	fi
+}
+
+# GENERATE
+function generate(){
+	# GRAB CURRENT INDEX
+	echo -e "${CYAN}WereBot: Preparing index.html for new post...${NC}"
+	if [ ! -f index.html ]; then
+		echo -e "${RED}WereBot could not find 'index.html'"
+		tryAgain
+	else
+		template=$(<index.html)
+		header=${template/"-->"*/"-->"}
+		content=${template#*"-->"}
+		#if [ $DEBUG == 0 ]; then
+			#echo -e "${CYAN}WereBot: Making a backup...${NC}"
+			#mv index.html index_backup.html
+		#fi
+		echo -e "${CYAN}WereBot: Saving HTML...${NC}"
+		# LETS GO
+		OUTPUT=$header
+		OUTPUT=$OUTPUT'<article>'
+		OUTPUT=$OUTPUT'<a href="#'$YTID'" name="'$YTID'">'
+		OUTPUT=$OUTPUT'<h2>'$HTMLTITLE'</h2>'
+		OUTPUT=$OUTPUT'</a>'
+		OUTPUT=$OUTPUT'<time>Published '$HTMLDATE'</time>'
+		OUTPUT=$OUTPUT'<video width="640" height="360"controls><source src="videos/'$YTID'.webm" type="video/webm"></video>'
+		OUTPUT=$OUTPUT'<details>'
+		OUTPUT=$OUTPUT'<summary>Show Notes</summary>'
+		OUTPUT=$OUTPUT'<br>'
+		OUTPUT=$OUTPUT'<p><strong>YouTube:</strong> <a href="'$YT$YTID'">'$YT$YTID'</a></p>'
+		OUTPUT=$OUTPUT'<p>'
+		OUTPUT=$OUTPUT$HTMLDESC
+		OUTPUT=$OUTPUT'</p>'
+		OUTPUT=$OUTPUT'</details>'
+		OUTPUT=$OUTPUT'</article>'
+		OUTPUT=$OUTPUT$content
+		echo $OUTPUT > index.html
+		getVideo
+		echo -e "${CYAN}WereBot: Done!${NC}"
+		exit
+	fi
+}
+
+# INIT
+function init(){
+welcome
+
+# CHECK FOR youtube-dl
+if ! [ -x "$(command -v youtube-dl)" ]; then
+    echo -e "${RED}- youtube-dl not installed. Video auto-download disabled.${CYAN}"
+	echo "--------------------"
+	else
+	CANDOWNLOAD=1
+fi
+
+# DISPLAY API GET ATTEMPTS
+if [ $TRIES != 0 ]; then
+	echo "ATTEMPT: ${TRIES}"
+fi
+
+# GET API KEY
+if [ ! -f ~/youtubeapi ]; then
+    echo -e "${CYAN}WereBot: Hey guys! I'm WereBot!"
+    echo -e "WereBot: I need a YouTube Data API Key to function!\n"
+    echo -e "${RED}https://console.developers.google.com/${NC}\n"
+	echo -e "Enter YouTube API:"
+	read YTAPI
+	echo $YTAPI > ~/youtubeapi
+	echo "--------------------"
+else
+	YTAPI=$(<~/youtubeapi)
+fi
+
+# CHECK API THEN DISPLAY
+if [ $YTAPI != "ERR" ]; then
+	echo -e "${CYAN}API KEY: "$YTAPI
+	echo -e "--------------------${NC}"
+	getLink
+else
+	echo -e "${RED}WereBot encountered an error while obtaining your API key."
+	tryAgain
+fi
+}
+
+# CHECK FOR INDEX, THEN RUN
+welcome
+
+if [ ! -f index.html ]; then
+	echo -e "${RED}WereBot could not find 'index.html'"
+	askRestore
+else
+	init
+fi
