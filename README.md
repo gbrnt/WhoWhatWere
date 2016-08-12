@@ -1,5 +1,5 @@
 # WhoWhatWere
-Website for Chris Were's channel WhoWhatWere, destined for [ZeroNet](https://bit.no.com:43110/1PRY8bJF8kos6B91XLbAGRN99EuLVSZcXY)
+WhoWhatWere is a [YouTube Channel](http://whowhatwere.download) run by [Chris Were](http://site.whowhatwere.download/info.html), focusing on GNU/Linux, Tech and all things Free Software. This repo contains his site, hosted on [ZeroNet](https://bit.no.com:43110/1PRY8bJF8kos6B91XLbAGRN99EuLVSZcXY), and the tools used to maintain it.
 
 ## WereBot
 Optional script for quickly updating the site automatically.
@@ -17,4 +17,4 @@ restore the index.html file from the GitHub repository.
 ##### Usage
 Simply run the script using `./wereBot` and enter `a` and _that's it_.  
 The script will automatically download the latest video from Chris's YouTube channel in _webm_ format,  
-retreive all necessary metadata and add the item as an `<article>` to the index page.
+retrieve all necessary metadata and add the item as an `<article>` to the index page.
