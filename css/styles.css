@@ -48,9 +48,10 @@ time {
 }
 
 article {
+    position: relative;
     padding-bottom: 1em;
     border-top: 1px solid #222;
-    padding: 30px 0 0;
+    padding: 50px 0 10px 0;
 }
 
 details {
@@ -91,6 +92,20 @@ footer img{
 footer img {
     margin-left: 10px;
     width: 14px;
+}
+
+mark{
+    position: absolute;
+    background: #111;
+    color: #717171;
+    cursor: default;
+    top: 0;
+    padding: 6px;
+    transition: color 0.4s;
+}
+
+article:hover > mark{
+    color: #33ba3e;
 }
 
 #youtubelogo {
@@ -141,7 +156,7 @@ footer img {
 	background: #a8a8a8; 
 }
 
-@media (max-width: 900px){
+@media (max-width: 1400px){
     body {
         margin: 0 10%;
     }
