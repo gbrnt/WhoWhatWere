@@ -1,9 +1,11 @@
 #!/bin/bash
-VERSION=1.0
+VERSION=1.1
 
 # VARIABLES
 TRIES=0
 CANDOWNLOAD=0
+CANRESIZE=0
+CANCONVERT=0
 DEBUG=0
 
 # YOUTUBE VARIABLES
@@ -13,6 +15,7 @@ YTURL="ERR"
 CHID=UCAPR27YUyxmgwm3Wc2WSHLw
 
 # URL VARIABLES
+THUMBDIR=img/thumb/
 YT=https://www.youtube.com/watch?v=
 BACKUP=https://raw.githubusercontent.com/Luxtylo/WhoWhatWere/master/index.html
 
@@ -20,6 +23,7 @@ BACKUP=https://raw.githubusercontent.com/Luxtylo/WhoWhatWere/master/index.html
 HTMLDESC="UNKNOWN"
 HTMLTITLE="UNKNOWN"
 HTMLDATE="UNKNOWN"
+HTMLTYPE="VIDEO"
 
 # COLORS
 GRAY='\033[0;37m'
@@ -69,7 +73,7 @@ echo "Welcome to WereBot v${VERSION}"
 echo "--------------------"
 echo -e "${GRAY}"
 echo -e "a | auto - Auto grab the latest video and add to index."
-echo -e "r |restore - Restores index.html from GitHub repository."
+echo -e "r | restore - Restores index.html from GitHub repository."
 echo -e "d | debug - Runs script in test mode and adds empty article to index."
 echo -e "${CYAN}"
 }
@@ -110,6 +114,16 @@ function getLink(){
 			YTURL="${YT}${YTURL}"
 		fi
 		if [[ "$YTURL" == "${YT}"* ]];then
+			read -r -p "Select download type: (audio/video) [a/v] " response
+			case $response in
+				[vV])
+					echo -e "${CYAN}WereBot: Video selected!${NC}"
+					;;
+				[aA])
+					HTMLTYPE="AUDIO"
+					echo -e "${CYAN}WereBot: Audio selected!${NC}"
+					;;
+			esac
 			linkCorrect
 		else
 			echo -e "${CYAN}WereBot: This doesn't look like a YouTube Address.${NC}"
@@ -171,10 +185,27 @@ function getLatest(){
 # DOWNLOAD VIDEO
 function getVideo(){
 	if [ $CANDOWNLOAD == 1 ] && [ $DEBUG == 0 ]; then
-		echo -e "${CYAN}WereBot: Downloading video...${NC}"
-		youtube-dl -o videos/$YTID.webm -f 43 "$YT$YTID"
+		if [ "$HTMLTYPE" == "VIDEO" ]; then
+			echo -e "${CYAN}WereBot: Downloading video...${NC}"
+			youtube-dl -o videos/$YTID.webm -f 43 "$YT$YTID"
 		else
+			echo -e "${CYAN}WereBot: Downloading audio...${NC}"
+			youtube-dl -o videos/$YTID.ogg --extract-audio --audio-format vorbis --audio-quality 0 "$YT$YTID"
+		fi
+	else
 		echo -e "${CYAN}WereBot: Download skipped.${NC}"
+	fi
+	if [ "$HTMLTYPE" == "AUDIO" ] && [ $DEBUG == 0 ]; then
+		echo -e "${CYAN}WereBot: Downloading thumbnail...${NC}"
+		THUMBURL=http://img.youtube.com/vi/$YTID/maxresdefault.jpg
+		wget $THUMBURL -O $THUMBDIR$YTID.jpg
+		if [ $CANRESIZE == 1 ]; then
+			echo -e "${CYAN}WereBot: Optimising thumbnail...${NC}"
+			convert $THUMBDIR$YTID.jpg -resize 640x360 tmp_$THUMBDIR$YTID.jpg
+			mv tmp_$THUMBDIR$YTID.jpg $THUMBDIR$YTID.jpg
+		else
+			echo -e "${CYAN}WereBot: Thumbnail could not be resized automatically [640x360].${NC}"
+		fi
 	fi
 }
 
@@ -189,30 +220,40 @@ function generate(){
 		template=$(<index.html)
 		header=${template/"-->"*/"-->"}
 		content=${template#*"-->"}
+		content="${content//<details open>/<details>}"
 		#if [ $DEBUG == 0 ]; then
 			#echo -e "${CYAN}WereBot: Making a backup...${NC}"
 			#mv index.html index_backup.html
 		#fi
 		echo -e "${CYAN}WereBot: Saving HTML...${NC}"
 		# LETS GO
-		OUTPUT=$header
-		OUTPUT=$OUTPUT'<article>'
-		OUTPUT=$OUTPUT'<a href="#'$YTID'" name="'$YTID'">'
-		OUTPUT=$OUTPUT'<h2>'$HTMLTITLE'</h2>'
-		OUTPUT=$OUTPUT'</a>'
-		OUTPUT=$OUTPUT'<time>Published '$HTMLDATE'</time>'
-		OUTPUT=$OUTPUT'<video width="640" height="360"controls><source src="videos/'$YTID'.webm" type="video/webm"></video>'
-		OUTPUT=$OUTPUT'<details>'
-		OUTPUT=$OUTPUT'<summary>Show Notes</summary>'
-		OUTPUT=$OUTPUT'<br>'
-		OUTPUT=$OUTPUT'<p><strong>YouTube:</strong> <a href="'$YT$YTID'">'$YT$YTID'</a></p>'
-		OUTPUT=$OUTPUT'<p>'
-		OUTPUT=$OUTPUT$HTMLDESC
-		OUTPUT=$OUTPUT'</p>'
-		OUTPUT=$OUTPUT'</details>'
-		OUTPUT=$OUTPUT'</article>'
-		OUTPUT=$OUTPUT$content
-		echo $OUTPUT > index.html
+		{
+		echo -e "$header"
+		echo -e "<article>"
+		echo -e "\t<mark>$HTMLTYPE</mark>"
+		echo -e "\t<a href="#$YTID" name="$YTID">"
+		echo -e "\t\t<h2>$HTMLTITLE</h2>"
+		echo -e "\t</a>"
+		echo -e "\t<time>Published $HTMLDATE</time>"
+		if [ "$HTMLTYPE" == "VIDEO" ]; then
+			echo -e "\t<video width="640" height="360" controls>"
+			echo -e "\t\t<source src="videos/$YTID.webm" type="video/webm">"
+		else
+			echo -e "\t<video width="640" height="360" poster="$THUMBDIR$YTID.jpg" controls>"
+			echo -e "\t\t<source src="videos/$YTID.ogg" type="audio/ogg">"
+		fi
+		echo -e "\t</video>"
+		echo -e "\t<details open>"
+		echo -e "\t\t<summary>Show Notes</summary>"
+		echo -e "\t\t<br>"
+		echo -e "\t\t<p><strong>YouTube:</strong> <a href="$YT$YTID">$YT$YTID</a></p>"
+		echo -e "\t\t<p>"
+		echo -e "\t\t$HTMLDESC"
+		echo -e "\t\t</p>"
+		echo -e "\t</details>"
+		echo -e "</article>"
+		echo -e "$content"
+		} > index.html
 		getVideo
 		echo -e "${CYAN}WereBot: Done!${NC}"
 		exit
@@ -229,6 +270,22 @@ if ! [ -x "$(command -v youtube-dl)" ]; then
 	echo "--------------------"
 	else
 	CANDOWNLOAD=1
+fi
+
+# CHECK FOR imagemagick
+if ! [ -x "$(command -v imagemagick)" ]; then
+    echo -e "${RED}- imagemagick not installed. Thumbnail resizing disabled.${CYAN}"
+	echo "--------------------"
+	else
+	CANRESIZE=1
+fi
+
+# CHECK FOR ffmpeg
+if ! [ -x "$(command -v ffmpeg)" ]; then
+    echo -e "${RED}- ffmpeg not installed. Audio conversions to ogg may not work.${CYAN}"
+	echo "--------------------"
+	else
+	CANCONVERT=1
 fi
 
 # DISPLAY API GET ATTEMPTS
