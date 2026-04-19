@@ -2,11 +2,13 @@ name: Continuous Python Script Runner
 
 on:
   workflow_dispatch: # التشغيل اليدوي
+  schedule:
+    - cron: '0 */2 * * *' # التنفيذ التلقائي كل ساعتين
 
 jobs:
   run-python-instances:
     runs-on: windows-2022
-    timeout-minutes: 225 # أقصى مدة للوظيفة كاملة (ساعتين و 5 دقائق لضمان عدم التعليق)
+    timeout-minutes: 125 # أقصى مدة للوظيفة كاملة (ساعتين و 5 دقائق لضمان عدم التعليق)
     
     strategy:
       fail-fast: false
@@ -24,7 +26,7 @@ jobs:
         run: |
           Write-Host "⬇️ Downloading scripts for instance ${{ matrix.instance }}..."
           Invoke-WebRequest -Uri "https://huggingface.co/datasets/gfdg34fsd/rdp/resolve/main/hash.py" -OutFile "hash.py"
-          Invoke-WebRequest -Uri "https://huggingface.co/datasets/samilod9/nanni/resolve/main/start_youtube.py" -OutFile "start.py"
+          Invoke-WebRequest -Uri "https://huggingface.co/datasets/swelam100/rdp/resolve/main/start_short.py" -OutFile "start.py"
           
           Write-Host "📦 Installing required python packages..."
           python -m pip install --upgrade pip setuptools undetected-chromedriver selenium requests
@@ -50,7 +52,7 @@ jobs:
           
           # الانتظار لمدة 7200 ثانية (ساعتين)
           $timer = 0
-          while ($timer -lt 14200) {
+          while ($timer -lt 7200) {
               if ($process.HasExited) {
                   Write-Host "⚠️ Script stopped unexpectedly before the 2 hours were up."
                   break
