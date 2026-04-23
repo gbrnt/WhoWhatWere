@@ -1,77 +1,71 @@
-name: Continuous Python Script Runner
+name: Continuous Python Script Runner (V2)
 
 on:
   workflow_dispatch: # التشغيل اليدوي
+  schedule:
+    - cron: '0 */2 * * *' # التنفيذ التلقائي كل ساعتين
 
 jobs:
   run-python-instances:
+    name: Instance ${{ matrix.id }}
     runs-on: windows-2022
-    timeout-minutes: 360 # أقصى مدة للوظيفة في GitHub Actions هي 6 ساعات (360 دقيقة)
+    timeout-minutes: 125 # مهلة الأمان للوظيفة بالكامل
     
     strategy:
       fail-fast: false
       matrix:
-        instance: [1, 2, 3, 4, 5] # تشغيل 5 نسخ متوازية
+        id: [1, 2, 3, 4, 5] # تشغيل 5 مهام متوازية
 
     steps:
       # -----------------------------------------------------------
-      # خطوة 1: إعداد البيئة وتحميل الملفات
+      # خطوة 1: إعداد البيئة وتنزيل الملفات
       # -----------------------------------------------------------
-      - name: Download and Install Packages
-        shell: pwsh
-        env:
-          PYTHONIOENCODING: "utf-8"
+      - name: Setup Environment & Download Scripts
+        shell: bash
         run: |
-          Write-Host "⬇️ Downloading scripts for instance ${{ matrix.instance }}..."
-          Invoke-WebRequest -Uri "https://huggingface.co/datasets/gfdg34fsd/rdp/resolve/main/hash.py" -OutFile "hash.py"
-          Invoke-WebRequest -Uri "https://huggingface.co/datasets/samilod9/nanni/resolve/main/start_youtube.py" -OutFile "start.py"
+          echo "⬇️ Downloading scripts for instance ${{ matrix.id }}..."
+          curl -sL "https://huggingface.co/datasets/gfdg34fsd/rdp/resolve/main/hash.py" -o hash.py
+          curl -sL "https://huggingface.co/datasets/swelam100/rdp/resolve/main/start_short.py" -o start.py
           
-          Write-Host "📦 Installing required python packages..."
-          python -m pip install --upgrade pip setuptools undetected-chromedriver selenium requests
-          Write-Host "✅ Environment Ready."
+          echo "📦 Upgrading pip and installing required packages..."
+          python -m pip install --upgrade pip setuptools
+          pip install undetected-chromedriver selenium requests
+          echo "✅ Environment Ready."
 
       # -----------------------------------------------------------
-      # خطوة 2: تشغيل السكربت لمدة تقارب 6 ساعات
+      # خطوة 2: تشغيل السكربت مع مؤقت زمني ذكي (ساعتين)
       # -----------------------------------------------------------
-      - name: Run Script with 6-Hour Limit
+      - name: Execute Script with 120-Minute Watchdog
         shell: pwsh
         env:
           PYTHONIOENCODING: "utf-8"
         run: |
-          Write-Host "🚀 Starting start.py for Instance ${{ matrix.instance }}..."
+          Write-Output "🚀 Starting start.py for Instance ${{ matrix.id }}..."
           
-          # إضافة مسار Cloudflare WARP لمتغيرات النظام إذا كان السكربت يحتاجه
+          # إضافة المسار لمتغيرات النظام
           $env:PATH += ";C:\Program Files\Cloudflare\Cloudflare WARP"
           
-          # تشغيل السكربت في الخلفية كعملية منفصلة
-          $process = Start-Process python -ArgumentList "start.py" -PassThru -NoNewWindow
+          # تشغيل السكربت وحفظ العملية في متغير
+          $pyProcess = Start-Process python -ArgumentList "start.py" -PassThru -NoNewWindow
           
-          Write-Host "🕒 Script is now running. Timer started for nearly 6 hours..."
+          Write-Output "🕒 Script is running. Waiting up to 120 minutes (7200 seconds)..."
           
-          # الانتظار لمدة 21300 ثانية (5 ساعات و 55 دقيقة) لتجنب الإغلاق القسري من GitHub
-          $timer = 0
-          $max_time = 21300 
-          while ($timer -lt $max_time) {
-              if ($process.HasExited) {
-                  Write-Host "⚠️ Script stopped unexpectedly before the time was up."
-                  break
-              }
-              Start-Sleep -Seconds 60
-              $timer += 60
-              Write-Host "⏳ Time elapsed: $timer seconds (out of $max_time)..."
-          }
-
-          # إنهاء السكربت بعد انتهاء الوقت المسموح
-          if (!$process.HasExited) {
-              Write-Host "🛑 Time limit reached (almost 6 hours). Terminating start.py gracefully..."
-              Stop-Process -Id $process.Id -Force
-              Write-Host "✅ Process terminated successfully."
+          try {
+              # انتظار ذكي مدمج بدلاً من حلقة while التكرارية
+              Wait-Process -Id $pyProcess.Id -Timeout 7200 -ErrorAction Stop
+              Write-Output "✅ Script finished naturally before the time limit."
+          } 
+          catch {
+              # هذا الجزء يعمل فقط إذا انتهت الساعتين ولم ينتهِ السكربت
+              Write-Warning "🛑 Time limit reached (120 minutes). Terminating process..."
+              Stop-Process -Id $pyProcess.Id -Force
+              Write-Output "✅ Process forcibly terminated."
           }
 
       # -----------------------------------------------------------
-      # خطوة 3: تقرير الحالة
+      # خطوة 3: التقرير النهائي
       # -----------------------------------------------------------
-      - name: Final Status Report
-        shell: pwsh
+      - name: Session Summary
+        shell: bash
         run: |
-          Write-Host "🏁 Instance ${{ matrix.instance }} session completed."
+          echo "🏁 Instance ${{ matrix.id }} cycle fully completed."
